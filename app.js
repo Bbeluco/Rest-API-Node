@@ -1,10 +1,10 @@
 const express = require('express')
-const app = express(); //Isso é uma instancia de express, mesmo sem a palavra new na frente
+const app = new express(); //Isso é uma instancia de express, mesmo sem a palavra new na frente
 
-app.use((req, res, next) => {
-    res.status(200).send({
-        message: 'Tudo certo, funcionando'
-    })
-})
+const rotaProdutos = require('./routes/produtos');
+const rotaPedidos = require('./routes/pedidos');
+
+app.use('/produtos', rotaProdutos);
+app.use('/pedidos', rotaPedidos);
 
 module.exports = app;
