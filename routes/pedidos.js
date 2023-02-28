@@ -11,7 +11,7 @@ router.get('/:id_pedido', (req, res, next) => {
 
 router.post('/', (req, res, next) => {
     res.status(200).send({
-        message: 'Pedido criado com sucesso!!',
+        message: 'Pedido criado com sucesso!',
         id: '122'
     })
 })
