@@ -2,6 +2,8 @@ const express = require('express')
 const router = express.Router();
 const mysql = require('../mysql').pool;
 
+const COMMON_URL = 'http://localhost:3000/produtos/'
+
 //Habilita rota GET e somente envia mensagem e status para o user
 router.get('/', (req, res, next) => {
     mysql.getConnection((error, conn) => {
@@ -9,7 +11,7 @@ router.get('/', (req, res, next) => {
             return res.status(500).send({ error: error })
         }
         conn.query('SELECT * FROM produtos',
-        (error, resultado, field) => {
+        (error, result, field) => {
             conn.release();
 
             if(error) {
@@ -18,9 +20,18 @@ router.get('/', (req, res, next) => {
                     response: null
                 })
             } else {
-                res.status(200).send({
-                    message: resultado
-                })
+                const response = {
+                    quantidade_catalogo: result.length,
+                    produtos: result.map(prod => {
+                        return {
+                            id_produto: prod.idprodutos,
+                            nome: prod.nome,
+                            preco: prod.preco,
+                            url: COMMON_URL + prod.idprodutos
+                        }
+                    })
+                }
+                res.status(200).send(response)
             }
         })
     })
@@ -40,7 +51,7 @@ router.post('/', (req, res, next) => {
 
         conn.query('INSERT INTO produtos (nome, preco) VALUES (?, ?)', 
         [produtos.nome, produtos.preco],
-        (error, resultado, field) => {
+        (error, result, field) => {
             conn.release()
 
 
@@ -50,10 +61,14 @@ router.post('/', (req, res, next) => {
                     response: null
                 })
             } else {
-                res.status(201).send({
-                    mensagem: "Produto inserido com sucesso",
-                    id_produto: resultado.insertId
-                })
+                const response =  {
+                    messagem: "Produto criado com sucesso!",
+                    id_produto: result.insertId,
+                    nome: produtos.nome,
+                    preco:  produtos.preco,
+                    url: COMMON_URL + result.insertId
+                }
+                res.status(201).send(response)
             }
         }
         )
@@ -97,7 +112,8 @@ router.delete('/:id_produto', (req, res, next) => {
         if(error) { return res.status(500).send({ error: error })}
         conn.query('DELETE FROM produtos WHERE idprodutos=(?)', 
         [id],
-        (error, resposta, fields) => {
+        (error, result, fields) => {
+            conn.release();
             if(error) {
                 res.status(500).send({ 
                     error: error,
@@ -106,7 +122,7 @@ router.delete('/:id_produto', (req, res, next) => {
             } else {
                 res.status(201).send({
                     message: "Produto deletado com sucesso",
-                    resposta: resposta
+                    resposta: result
                 })
             }
         })
@@ -118,20 +134,21 @@ router.get('/:id_produto', (req, res, next) => {
     const id = req.params.id_produto
     mysql.getConnection((error, conn) => {
         if(error) { return res.status(500).send({ error: error})}
-        conn.query("SELECT * FROM produtos WHERE idprodutos=(?)",
-        [id],
-        (error, resposta, fields) => {
+        conn.query(`SELECT * FROM produtos WHERE idprodutos=${id}`,
+        (error, result, fields) => {
             conn.release();
 
             if(error) {
-                res.status(500).send({
+                return res.status(500).send({
                     error: error,
                     response: null
                 })
-            } else {
-                res.status(200).send({
-                    response: resposta
+            } else if(result.length == 0) {
+                return res.status(404).send({
+                    mensagem: "Voce pesquisou por um ID inválido, tente novamente com outro ID"
                 })
+            } else {
+                return res.status(200).send(result)
             }
         })
     })
