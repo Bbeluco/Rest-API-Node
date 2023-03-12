@@ -4,6 +4,7 @@ const bodyParser = require('body-parser')
 const app = new express(); //Isso é uma instancia de express, mesmo sem a palavra new na frente
 
 app.use(morgan('dev')) //Printa LOG na tela do DEV
+app.use('/uploads', express.static('uploads'))
 app.use(bodyParser.urlencoded({ extended: false })) //So quero trabalhar com JSON
 app.use(bodyParser.json()) //Converto o que eu receber para json
 
@@ -26,10 +27,12 @@ app.use((req, res, next) => {
 
 const rotaProdutos = require('./routes/produtos');
 const rotaPedidos = require('./routes/pedidos');
+const rotaUsuarios = require('./routes/usuarios')
 
 
 app.use('/produtos', rotaProdutos);
 app.use('/pedidos', rotaPedidos);
+app.use('/usuarios', rotaUsuarios);
 
 //Quem nao encontra rota entra aqui
 app.use((req, res, next) => {
